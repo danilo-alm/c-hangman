@@ -24,6 +24,7 @@ node;
 
 // Function prototypes
 char *get_input(char *buff, size_t size, size_t *inplen);
+char get_char();
 int load_words(node **rootNode);
 char *get_random_word(node *rootNode, int wordCount);
 bool play(char *word, int wordlen);
@@ -93,8 +94,7 @@ bool play(char *word, int wordlen)
     // Index to add next used letter
     int usedLettersIndex = 0;
 
-    char usrinput[2];
-    char *letter;
+    char letter;
 
     while (guessed < toGuess && tries > 0)
     {
@@ -113,16 +113,14 @@ bool play(char *word, int wordlen)
         {
             isValid = false;
             printf("Letter: ");
-            get_input(usrinput, sizeof(usrinput), NULL);
+            letter = toupper(get_char());
 
-            usrinput[0] = toupper(usrinput[0]);
-            letter = &usrinput[0];
-            if (isalpha(*letter)) isValid = true;
+            if (isalpha(letter)) isValid = true;
 
             // Check if letter has aready been used
             for (int i = 0; usedLetters[i] != '\0'; i++)
             {
-                if (usedLetters[i] == *letter)
+                if (usedLetters[i] == letter)
                 {
                     printf("You have already used that letter.\n");
                     isValid = false;
@@ -133,14 +131,14 @@ bool play(char *word, int wordlen)
         while (!isValid);
 
         // Add letters to used letters
-        usedLetters[usedLettersIndex] = *letter;
+        usedLetters[usedLettersIndex] = letter;
         usedLettersIndex++;
 
         // Check if letter is in word
         bool inWord = false;
         for (int i = 0; i < wordlen; i++)
         {
-            if (*letter == word[i])
+            if (letter == word[i])
             {
                 inWord = true;
                 guessed++;
@@ -157,12 +155,11 @@ bool play(char *word, int wordlen)
     printf("The word was %s\n", word);
 
     // Prompt user to play again
-    char answer[2];
     printf("\nDo you want to play again? (Y/n)\n> ");
-    get_input(answer, sizeof(answer), NULL);
+    char answer = get_char();
 
     printf("\n");
-    if (toupper(answer[0]) == 'Y')
+    if (toupper(answer) == 'Y')
         return true;
     return false;
 }
@@ -172,10 +169,12 @@ char *get_input(char *buff, size_t size, size_t *inplen)
 {
     buff[0] = '\0';
     size_t len = 0;
+
     if (fgets(buff, size, stdin) != NULL)
     {
         len = strlen(buff);
-        char *endp = &buff[len - 1];
+        char *endp = len == 0 ? buff : &buff[len - 1];
+
         if (*endp != '\n')
         {
             // Clear keyboard buffer
@@ -191,6 +190,17 @@ char *get_input(char *buff, size_t size, size_t *inplen)
         if (inplen != NULL) *inplen = len;
     }
     return buff;
+}
+
+// Uses getchar() and clears buffer
+char get_char()
+{
+    char c = getchar();
+
+    int discard;
+    while ((discard = getchar()) != '\n' && discard != EOF);
+
+    return c;
 }
 
 // Returns number of different letters in word
